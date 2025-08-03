@@ -1,4 +1,4 @@
-#jlox Interpreter
+# jlox Interpreter
 
 This is the implementation of the jlox interpreter from the book [Crafting Interpreters](https://craftinginterpreters.com/).
 
@@ -11,6 +11,41 @@ This README is mainly to take notes while I read the book.
 ### Lexing
 
 * [Handling longer lexems and lookahead](https://craftinginterpreters.com/scanning.html#longer-lexemes)
+
+### Grammar
+
+* [Explanation of grammars with brekfast options](https://craftinginterpreters.com/representing-code.html#rules-for-grammars)
+
+#### List of expressions
+
+- **Literals:** Numbers, strings, Booleans, and nil.
+- **Unary expressions:** A prefix ! to perform a logical not, and - to negate a number.
+- **Binary expressions:** The infix arithmetic (+, -, *, /) and logic operators (==, !=, <, <=, >, >=) we know and love.
+- **Parentheses:** A pair of ( and ) wrapped around an expression.
+
+#### Lox grammar
+
+```
+expression     → literal
+               | unary
+               | binary
+               | grouping ;
+
+literal        → NUMBER | STRING | "true" | "false" | "nil" ;
+grouping       → "(" expression ")" ;
+unary          → ( "-" | "!" ) expression ;
+binary         → expression operator expression ;
+operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
+               | "+"  | "-"  | "*" | "/" ;
+```
+
+#### Run Expr class generation tool
+
+```bash
+$ cd src
+$ javac com/craftinginterpreters/tool/GenerateAst.java
+$ java com.craftinginterpreters.tool.GenerateAst com/craftinginterpreters/lox
+```
 
 ### Error handling
 
