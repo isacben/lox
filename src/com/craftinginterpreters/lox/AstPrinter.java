@@ -40,6 +40,16 @@ class AstPrinter implements Expr.Visitor<String> {
     return builder.toString();
   }
 
+  @Override
+  public String visitVariableExpr(Expr.Variable expr) {
+      return "";
+  }
+
+  @Override
+  public String visitAssignExpr(Expr.Assign expr) {
+      return "";
+  }
+
   // public static void main(String[] args) {
   //   Expr expression = new Expr.Binary(
   //       new Expr.Unary(

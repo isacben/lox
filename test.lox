@@ -1,3 +1,6 @@
-var name = "Isaac Benitez";
-
-var age = 40;
+print "one";
+print true;
+print 1+5;
+var a = 1;
+var b = 2;
+print a + b;

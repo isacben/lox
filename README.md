@@ -53,7 +53,7 @@ primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" ;
 ```
 
-Grammar vs Precendence
+##### Grammar vs Precendence
 
 | TOP     | Equiality      | LOWER      |
 | -       | -              | -          |
@@ -74,6 +74,70 @@ A recursive descent parser is a literal translation of the grammar’s rules str
 
 The descent is described as “recursive” because when a grammar rule refers to itself—directly or indirectly—that translates to a recursive function call.
 
+##### Adding statements
+
+```
+program        → statement* EOF ;
+
+statement      → exprStmt
+               | printStmt ;
+
+exprStmt       → expression ";" ;
+printStmt      → "print" expression ";" ;
+```
+
+##### Adding declarations (for vqriables)
+
+```
+program        → declaration* EOF ;
+
+declaration    → varDecl
+               | statement ;
+
+statement      → exprStmt
+               | printStmt ;
+```
+
+And the rule for declaring a variable:
+
+```
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+```
+
+And update the primary expression:
+
+```
+primary        → "true" | "false" | "nil"
+               | NUMBER | STRING
+               | "(" expression ")"
+               | IDENTIFIER ;
+```
+
+##### Adding assignments
+
+This says an assignment is either an identifier followed by
+an = and an expression for the value, or an equality
+(and thus any other) expression.
+
+```
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment
+               | equality ;
+```
+
+[Check the book section](https://craftinginterpreters.com/statements-and-state.html#assignment-syntax)
+
+The classic terms for these two constructs are l-value and
+r-value. All of the expressions that we’ve seen so far that
+produce values are r-values. An l-value “evaluates” to a
+*storage location* that you can assign into.
+
+We want the syntax tree to reflect that an l-value isn’t
+evaluated like a normal expression. That’s why the Expr.Assign
+node has a Token for the left-hand side, not an Expr.
+The problem is that the parser doesn’t know it’s parsing an
+l-value until it hits the =. In a complex l-value, that may
+occur many tokens later.
 
 #### Run Expr class generation tool
 

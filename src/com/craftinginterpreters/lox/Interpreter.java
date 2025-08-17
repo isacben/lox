@@ -1,10 +1,26 @@
 package com.craftinginterpreters.lox;
 
-class Interpreter implements Expr.Visitor<Object> {
-  void interpret(Expr expression) { 
+import java.util.List;
+
+class Interpreter implements Expr.Visitor<Object>,
+                             Stmt.Visitor<Void> {
+  private Environment environment = new Environment();
+
+  // interpret() method before statements
+  // void interpret(Expr expression) { 
+  //   try {
+  //     Object value = evaluate(expression);
+  //     System.out.println(stringify(value));
+  //   } catch (RuntimeError error) {
+  //     Lox.runtimeError(error);
+  //   }
+  // }
+
+  void interpret(List<Stmt> statements) {
     try {
-      Object value = evaluate(expression);
-      System.out.println(stringify(value));
+      for (Stmt statement : statements) {
+        execute(statement);
+      }
     } catch (RuntimeError error) {
       Lox.runtimeError(error);
     }
@@ -31,6 +47,11 @@ class Interpreter implements Expr.Visitor<Object> {
     return null;
   }
 
+  @Override
+  public Object visitVariableExpr(Expr.Variable expr) {
+    return environment.get(expr.name);
+  }
+
   private void checkNumberOperand(Token operator, Object operand) {
     if (operand instanceof Double) return;
     throw new RuntimeError(operator, "Operand must be a number.");
@@ -42,6 +63,12 @@ class Interpreter implements Expr.Visitor<Object> {
     
     throw new RuntimeError(operator, "Operands must be numbers.");
   }
+
+  // private void checkDivisionByZero(Token operator, Object right) {
+  //   if (right instanceof Double && (Double)right != 0) return;
+  //   
+  //   throw new RuntimeError(operator, "Division by zero.");
+  // }
 
   private boolean isTruthy(Object object) {
     if (object == null) return false;
@@ -81,6 +108,47 @@ class Interpreter implements Expr.Visitor<Object> {
     return expr.accept(this);
   }
 
+  // That’s the statement analogue to the evaluate() method we
+  // have for expressions
+  private void execute(Stmt stmt) {
+    stmt.accept(this);
+  }
+
+  // We evaluate the inner expression using our existing
+  // evaluate() method and discard the value. Then we return null.
+  // Java requires that to satisfy the special capitalized
+  // Void return type.
+  @Override
+  public Void visitExpressionStmt(Stmt.Expression stmt) {
+    evaluate(stmt.expression);
+    return null;
+  }
+
+  @Override
+  public Void visitPrintStmt(Stmt.Print stmt) {
+    Object value = evaluate(stmt.expression);
+    System.out.println(stringify(value));
+    return null;
+  }
+
+  @Override
+  public Void visitVarStmt(Stmt.Var stmt) {
+    Object value = null;
+    if (stmt.initializer != null) {
+      value = evaluate(stmt.initializer);
+    }
+
+    environment.define(stmt.name.lexeme, value);
+    return null;
+  }
+
+  @Override
+  public Object visitAssignExpr(Expr.Assign expr) {
+    Object value = evaluate(expr.value);
+    environment.assign(expr.name, value);
+    return value;
+  }
+
   @Override
   public Object visitBinaryExpr(Expr.Binary expr) {
     Object left = evaluate(expr.left);
@@ -115,6 +183,7 @@ class Interpreter implements Expr.Visitor<Object> {
           "Operands must be two numbers or two strings.");
       case SLASH:
         checkNumberOperands(expr.operator, left, right);
+        // checkDivisionByZero(expr.operator, right);
         return (double)left / (double)right;
       case STAR:
         checkNumberOperands(expr.operator, left, right);
