@@ -114,6 +114,26 @@ class Interpreter implements Expr.Visitor<Object>,
     stmt.accept(this);
   }
 
+  void executeBlock(List<Stmt> statements,
+                    Environment environment) {
+    Environment previous = this.environment;
+    try {
+      this.environment = environment;
+
+      for (Stmt statement : statements) {
+        execute(statement);
+      }
+    } finally {
+      this.environment = previous;
+    }
+  }
+
+  @Override
+  public Void visitBlockStmt(Stmt.Block stmt) {
+    executeBlock(stmt.statements, new Environment(environment));
+    return null;
+  }
+
   // We evaluate the inner expression using our existing
   // evaluate() method and discard the value. Then we return null.
   // Java requires that to satisfy the special capitalized

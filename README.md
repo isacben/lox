@@ -139,6 +139,16 @@ The problem is that the parser doesn’t know it’s parsing an
 l-value until it hits the =. In a complex l-value, that may
 occur many tokens later.
 
+##### Adding block syntax and semantics
+
+```
+statement      → exprStmt
+               | printStmt
+               | block ;
+
+block          → "{" declaration* "}" ;
+```
+
 #### Run Expr class generation tool
 
 ```bash
@@ -171,3 +181,5 @@ know these anyway, so there’s no overhead to calculate them."
 
 * [static imports considered bad style](https://craftinginterpreters.com/scanning.html#the-scanner-class)
 * [Ternary as a function argument](https://craftinginterpreters.com/scanning.html#operators): `addToken(match('=') ? BANG_EQUAL : BANG);`
+* In Java, `finally` is used to execute code in a `try{}` block even if
+  an exception is thrown. See [finally](https://craftinginterpreters.com/statements-and-state.html#assignment-syntax:~:text=void%20executeBlock(,%3D%20previous%3B%0A%20%20%20%20%7D%0A%20%20%7D))
