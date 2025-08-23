@@ -149,6 +149,70 @@ statement      → exprStmt
 block          → "{" declaration* "}" ;
 ```
 
+##### Control flow
+
+An if statement lets you conditionally execute statements and the
+conditional operator lets you conditionally execute expressions.
+
+Grammar for if statement:
+
+```
+statement      → exprStmt
+               | ifStmt
+               | printStmt
+               | block ;
+
+ifStmt         → "if" "(" expression ")" statement
+               ( "else" statement )? ;
+```
+
+##### Logical operators
+
+Grammar:
+
+```
+expression     → assignment ;
+assignment     → IDENTIFIER "=" assignment
+               | logic_or ;
+logic_or       → logic_and ( "or" logic_and )* ;
+logic_and      → equality ( "and" equality )* ;
+```
+
+##### While statement
+
+Grammar:
+
+```
+statement      → exprStmt
+               | ifStmt
+               | printStmt
+               | whileStmt
+               | block ;
+
+whileStmt      → "while" "(" expression ")" statement ;
+```
+
+##### For statements
+
+Grammar:
+
+```
+statement      → exprStmt
+               | forStmt
+               | ifStmt
+               | printStmt
+               | whileStmt
+               | block ;
+
+forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+                 expression? ";"
+                 expression? ")" statement ;
+```
+
+[Explanation here](https://craftinginterpreters.com/control-flow.html#logical-operators:~:text=In%20grammarese%2C%20that%E2%80%99s%3A)
+
+[Desugaring](https://craftinginterpreters.com/control-flow.html#logical-operators:~:text=showed%20you%20earlier.-,The%20code,-is%20a%20little)
+
 #### Run Expr class generation tool
 
 ```bash

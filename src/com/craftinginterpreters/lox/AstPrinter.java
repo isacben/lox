@@ -50,6 +50,11 @@ class AstPrinter implements Expr.Visitor<String> {
       return "";
   }
 
+  @Override
+  public String visitLogicalExpr(Expr.Logical expr) {
+      return "";
+  }
+
   // public static void main(String[] args) {
   //   Expr expression = new Expr.Binary(
   //       new Expr.Unary(

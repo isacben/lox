@@ -1,6 +1,7 @@
 package com.craftinginterpreters.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.craftinginterpreters.lox.TokenType.*;
@@ -68,10 +69,90 @@ class Parser {
   }
 
   private Stmt statement() {
+    if (match(FOR)) return forStatement();
+    if (match(IF)) return ifStatement();
     if (match(PRINT)) return printStatement();
+    if (match(WHILE)) return whileStatement();
     if (match(LEFT_BRACE)) return new Stmt.Block(block());
 
     return expressionStatement();
+  }
+
+  private Stmt forStatement() {
+    consume(LEFT_PAREN, "Expect '(' after 'for'.");
+ 
+    // The initializer clause
+    Stmt initializer;
+    if (match(SEMICOLON)) {
+      initializer = null;
+    } else if (match(VAR)) {
+      initializer = varDeclaration();
+    } else {
+      initializer = expressionStatement();
+    }
+
+    // The condition clause
+    Expr condition = null;
+    if (!check(SEMICOLON)) {
+      condition = expression();
+    }
+    consume(SEMICOLON, "Expect ';' after loop condition.");
+ 
+    // The increment clause
+    Expr increment = null;
+    if (!check(RIGHT_PAREN)) {
+      increment = expression();
+    }
+    consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+    Stmt body = statement();
+
+    // Desugaring
+
+    // The increment, if there is one, executes after the body
+    // in each iteration of the loop. We do that by replacing
+    // the body with a little block that contains the original
+    // body followed by an expression statement that evaluates
+    // the increment.
+    if (increment != null) {
+      body = new Stmt.Block(
+          Arrays.asList(
+              body,
+              new Stmt.Expression(increment)));
+    }
+
+    // Next, we take the condition and the body and build the
+    // loop using a primitive while loop. If the condition is
+    // omitted, we jam in true to make an infinite loop.
+    if (condition == null) condition = new Expr.Literal(true);
+    body = new Stmt.While(condition, body);
+
+    // Finally, if there is an initializer, it runs once before
+    // the entire loop. We do that by, again, replacing the whole
+    // statement with a block that runs the initializer and then
+    // executes the loop.
+    if (initializer != null) {
+      body = new Stmt.Block(Arrays.asList(initializer, body));
+    }
+
+    // That’s it. Our interpreter now supports C-style for
+    // loops and we didn’t have to touch the Interpreter class
+    // at all.
+    return body;
+  }
+
+  private Stmt ifStatement() {
+    consume(LEFT_PAREN, "Expect '(' after 'if'.");
+    Expr condition = expression();
+    consume(RIGHT_PAREN, "Expect ')' after if condition."); 
+
+    Stmt thenBranch = statement();
+    Stmt elseBranch = null;
+    if (match(ELSE)) {
+      elseBranch = statement();
+    }
+
+    return new Stmt.If(condition, thenBranch, elseBranch);
   }
 
   private Stmt printStatement() {
@@ -90,6 +171,15 @@ class Parser {
 
     consume(SEMICOLON, "Expect ';' after variable declaration.");
     return new Stmt.Var(name, initializer);
+  }
+
+  private Stmt whileStatement() {
+    consume(LEFT_PAREN, "Expect '(' after 'while'.");
+    Expr condition = expression();
+    consume(RIGHT_PAREN, "Expect ')' after condition.");
+    Stmt body = statement();
+
+    return new Stmt.While(condition, body);
   }
 
   private Stmt expressionStatement() {
@@ -112,7 +202,11 @@ class Parser {
   private Expr assignment() {
     // Explanation is here: 
     // https://craftinginterpreters.com/statements-and-state.html#assignment-syntax
-    Expr expr = equality();
+
+    // before having and/or we were evaluating the equality
+    //Expr expr = equality();
+
+    Expr expr = or();
 
     if (match(EQUAL)) {
       Token equals = previous();
@@ -124,6 +218,30 @@ class Parser {
       }
 
       error(equals, "Invalid assignment target."); 
+    }
+
+    return expr;
+  }
+
+  private Expr or() {
+    Expr expr = and();
+
+    while (match(OR)) {
+      Token operator = previous();
+      Expr right = and();
+      expr = new Expr.Logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr and() {
+    Expr expr = equality();
+
+    while (match(AND)) {
+      Token operator = previous();
+      Expr right = equality();
+      expr = new Expr.Logical(expr, operator, right);
     }
 
     return expr;
